@@ -1,0 +1,21 @@
+[
+    {
+        "id": 1,
+        "name": "John Doe",
+        "email": "john.doe@example.com"
+    },
+
+    {
+        "id": 1,
+        "name": "John Doe",
+        "email": "john.doe@example.com",
+        "Ubicación": {
+          "Barrio": "Alfonso Lopez",
+          "direccion": "Calle 101 #65-1",
+          "Encuentro": {
+            "Zona": "A",
+            "Roe": "B"
+          }
+        }
+    }
+]
