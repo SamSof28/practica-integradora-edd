@@ -1,5 +1,7 @@
-from typing import Any, List, Optional
-from tree_logic import GeneralTree
+from typing import Any, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from src.tree_logic import GeneralTree, Node
 
 class NodeDocument:
   """
@@ -10,7 +12,7 @@ class NodeDocument:
     next: Puntero que le apunta a su documento siguiente en la linkedlist.
   """
   def __init__(self, document: GeneralTree, next = None) -> None:
-    self.value: GeneralTree = document
+    self.value: GeneralTree | Node = document
     self.next: NodeDocument | None = next
 
   def __repr__(self) -> str:
@@ -93,7 +95,7 @@ class LinkedList:
     values = []
     current = self.head
     while current:
-      values.append(str(current.value))
+      values.append(str(current.value.root))
       current = current.next
     return " → ".join(values) if values else "[]"
 

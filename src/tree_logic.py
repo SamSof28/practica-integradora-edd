@@ -1,9 +1,9 @@
-from structures import LinkedList
+from src.structures import LinkedList
 from typing import Any, List
 
 class GeneralTree:
-  def __init__(self):
-    self.root: Node = None
+  def __init__(self, root: Node = None):
+    self.root: Node = root
 
   def __repr__(self) -> str:
     if not self.root:
@@ -50,10 +50,9 @@ class Node:
       if isinstance(self.value[1], dict):
         return f"{self.value[0]}:"
       return f"{self.value[0]}: {self.value[1]}"
-    
     return f"{self.value}"
 
-def encontrar_nodos(tupla: tuple[Any, Any]) -> None:
+def encontrar_nodos(tupla: tuple[Any, Any]) -> Node:
   new_node: Node = Node(tupla)
   if isinstance(new_node.value[1], dict):
     for dato in new_node.value[1].items():
