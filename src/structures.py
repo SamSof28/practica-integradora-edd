@@ -4,48 +4,52 @@ if TYPE_CHECKING:
   from src.tree_logic import GeneralTree, Node
 
 class NodeDocument:
-  """
-  Nodos que van a contener cada documento de los archivos .json.
-  
+  """Nodo de la lista enlazada que almacena un documento o árbol.
+
   Args:
-    document: Documentos de los archivos json.
-    next: Puntero que le apunta a su documento siguiente en la linkedlist.
+    document (GeneralTree | Node): Valor que se guarda en el nodo.
+    next (NodeDocument | None): Referencia al siguiente nodo de la lista.
   """
   def __init__(self, document: GeneralTree, next = None) -> None:
     self.value: GeneralTree | Node = document
     self.next: NodeDocument | None = next
 
   def __repr__(self) -> str:
+    """Devuelve una representación textual del valor almacenado.
+
+    Returns:
+      str: Texto legible del contenido del nodo.
+    """
     return f"{self.value}"
 
 class LinkedList:
-  """
-  La clase LinkedList es la encargada de organizar correctamente los documentos completos
+  """Implementa una lista enlazada simple para guardar documentos.
 
-  Args:
-    head: Es el primer elemento de nuestra lista enlazada (Nos permite recorrer de manera correcta la lista enlazada)
-    tail: Es el ultimo elemento de nuestra lista enlazada
-    size: Nos dira el tamaño de nuestra lista enlazada o cuantos documentos hay
-
+  La estructura permite agregar, recorrer y eliminar documentos manteniendo
+  referencias al primer y al último nodo.
   """
   def __init__(self) -> None:
+    """Inicializa una lista enlazada vacía."""
     self.head: Optional[NodeDocument] = None
     self.tail: Optional[NodeDocument] = None
     self.size: int = 0
 
   def __iter__(self):
-    """Permite usar la LinkedList en ciclos 'for'."""
+    """Permite iterar sobre los valores almacenados en la lista.
+
+    Yields:
+      Any: Cada elemento guardado en la lista enlazada.
+    """
     current = self.head
     while current:
-        # Devolvemos el valor (que será un Nodo del árbol)
         yield current.value 
         current = current.next
 
   def append(self, value: Any) -> None:
-    """Permite agregar al final de la LinkedList un Objeto
+    """Agrega un valor al final de la lista enlazada.
 
     Args:
-        value: Elemento u Objeto agregar
+        value (Any): Elemento u objeto que se almacenará en un nuevo nodo.
     """
     new_node = NodeDocument(value)
     if not self.head:
@@ -58,9 +62,11 @@ class LinkedList:
     self.size += 1
 
   def delete_and_return_last(self) -> Any:
-    """Permite eliminar y retornar el ultimo elemento de la LinkedList
+    """Elimina y retorna el último elemento de la lista enlazada.
+
+    Returns:
+      Any: Valor almacenado en el último nodo eliminado.
     """
-    #llegando al penúltimo
     if(self.size == 1):
       old_tail = self.head
       self.head = None
@@ -80,7 +86,10 @@ class LinkedList:
     return old_tail.value
 
   def delete_and_return_first(self) -> Any:
-    """Permite eliminar y retornar el primer elemento de la LinkedList
+    """Elimina y retorna el primer elemento de la lista enlazada.
+
+    Returns:
+      Any: Valor almacenado en el primer nodo eliminado, o None si está vacía.
     """
     if(self.head is None):
       return None
@@ -92,6 +101,11 @@ class LinkedList:
     return old_head.value
 
   def __repr__(self) -> str:
+    """Devuelve una representación legible de la lista enlazada.
+
+    Returns:
+      str: Cadena con todos los elementos separados por flechas.
+    """
     values = []
     current = self.head
     while current:
@@ -100,5 +114,9 @@ class LinkedList:
     return " → ".join(values) if values else "[]"
 
   def __len__(self) -> int:
-    """Nos permite obtener el tamaño de linkedlist"""
+    """Devuelve la cantidad de nodos almacenados en la lista.
+
+    Returns:
+      int: Tamaño actual de la lista enlazada.
+    """
     return self.size
