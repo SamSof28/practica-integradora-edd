@@ -1,5 +1,8 @@
 from src.structures import LinkedList
 from src.tree_logic import GeneralTree, Node, encontrar_nodos
+from typing import Any
+
+import operator
 import json
 
 """def leer_archivo(ruta):
@@ -10,6 +13,15 @@ import json
 
 print("----"*5)
 """
+
+DICCIONARIO_OPERADORES: dict[str, Any] = {
+    "$eq": operator.eq,   # (==)
+    "$ne": operator.ne,   # (!=)
+    "$gt": operator.gt,   # (>)
+    "$gte": operator.ge,  # (>=)
+    "$lt": operator.lt,   # (<)
+    "$lte": operator.le   # (<=)
+}
 
 class DocumentCollection:
     """Representa una colección de documentos cargados como árboles.
@@ -37,20 +49,64 @@ class DocumentCollection:
             data (list): Lista de documentos estructurados en forma de diccionario.
         """
         for indice, document in enumerate(data):
-            raiz = Node(("Documento", f"{indice}"))
+            raiz = Node({"Documento": f"{indice}"})
             for dato in document.items():
                 raiz.children.append(encontrar_nodos(dato))
 
             nuevo_arbol = GeneralTree(raiz)
             self.documents.append(nuevo_arbol)
 
-    def find(self, criteria: dict):
-        """Busca documentos que coincidan con los criterios recibidos.
+    def find(self, criterio: dict) -> LinkedList:
+        """Busca y filtra los documentos que cumplan con todos los criterios.
 
         Args:
-            criteria (dict): Criterios de búsqueda a aplicar sobre los documentos.
+            criterio (dict): Diccionario con las rutas y condiciones de búsqueda.
 
         Returns:
-            Any: Resultado de la búsqueda. Actualmente no está implementado.
+            LinkedList: Una nueva lista enlazada con los árboles que coincidieron.
         """
-        pass
+        resultados: LinkedList = LinkedList()
+
+        # Caso borde exigido: la colección está vacía
+        if self.documents is None:
+            return resultados
+
+        # Recorremos cada árbol (documento) de la colección linealmente
+        for documento in self.documents:
+            cumple_con_todo = True
+
+            # Evaluamos cada una de las condiciones del criterio de búsqueda
+            for ruta, condicion in criterio.items():
+                valor_real = documento.obtener_valor_por_ruta(ruta)
+
+                # Si una sola condición falla, descartamos el documento inmediatamente
+                if not evaluar_condicion(valor_real, condicion):
+                    cumple_con_todo = False
+                    break
+
+            # Si pasó todos los filtros exitosamente, lo añadimos a los resultados
+            if cumple_con_todo:
+                resultados.append(documento)
+
+        return resultados
+
+def evaluar_condicion(valor_documento: Any, condicion: Any) -> bool:
+    """Compara el valor del documento contra la condición usando métodos especiales."""
+    
+    # Si la condición es un diccionario (ej: {"$gt": 25})
+    if isinstance(condicion, dict):
+        for op_texto, valor_esperado in condicion.items():
+            # Verificamos si el operador existe en nuestro mapeo de métodos especiales
+            if op_texto in DICCIONARIO_OPERADORES:
+                operacion = DICCIONARIO_OPERADORES[op_texto]
+                try:
+                    # Aquí se ejecuta el método especial (ej: valor_documento.__gt__(valor_esperado))
+                    if not operacion(valor_documento, valor_esperado):
+                        return False
+                except TypeError:
+                    # Caso borde: Intentar comparar un string con un entero ("Ana" > 25)
+                    return False
+        return True
+    
+    # Si es una consulta simple (ej: {"ciudad": "Medellín"}), usamos la igualdad común
+    return valor_documento == condicion
