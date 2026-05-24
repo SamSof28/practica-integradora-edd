@@ -1,21 +1,16 @@
 [
     {
         "id": 1,
-        "name": "John Doe",
-        "email": "john.doe@example.com"
+        "nombre": "Ana",
+        "edad": 25,
+        "ciudad": "Medellín",
+        "direccion": { "barrio": "Laureles" }
     },
-
     {
-        "id": 1,
-        "name": "John Doe",
-        "email": "john.doe@example.com",
-        "Ubicación": {
-          "Barrio": "Alfonso Lopez",
-          "direccion": "Calle 101 #65-1",
-          "Encuentro": {
-            "Zona": "A",
-            "Roe": "B"
-          }
-        }
+        "id": 2,
+        "nombre": "Samuel",
+        "edad": 18,
+        "ciudad": "Medellín",
+        "direccion": { "barrio": "Alfonso Lopez" }
     }
 ]
