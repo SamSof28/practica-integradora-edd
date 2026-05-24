@@ -111,7 +111,7 @@ class LinkedList:
     while current:
       values.append(str(current.value.root))
       current = current.next
-    return " → ".join(values) if values else "[]"
+    return " → ".join(values) if values else "List Empty"
 
   def __len__(self) -> int:
     """Devuelve la cantidad de nodos almacenados en la lista.
