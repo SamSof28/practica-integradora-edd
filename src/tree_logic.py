@@ -1,3 +1,4 @@
+from __future__ import annotations
 from src.structures import LinkedList
 from typing import Any, Optional
 
@@ -103,6 +104,44 @@ class GeneralTree:
         return self._buscar_por_ruta_recursivo(hijo, partes[1:])
 
     return None # Caso borde: la ruta consultada no existe en este documento
+
+  def a_dict(self) -> dict[Any, Any]:
+    """Convierte el árbol de vuelta a un diccionario Python (árbol → JSON).
+
+    Recorre recursivamente los hijos del nodo raíz y reconstruye el
+    diccionario original. El nodo raíz sintético "Documento" se omite.
+
+    Returns:
+      dict[Any, Any]: Diccionario que representa el documento original.
+    """
+    if not self.root:
+      return {}
+    return self._nodo_a_dict(self.root)
+
+  def _nodo_a_dict(self, nodo: Optional[Node]) -> dict[Any, Any]:
+    """Reconstruye recursivamente un diccionario a partir de un nodo.
+
+    Args:
+      nodo (Node): Nodo actual a convertir.
+
+    Returns:
+      dict[Any, Any]: Diccionario reconstruido desde ese nodo hacia abajo.
+    """
+    resultado: dict[Any, Any] = {}
+
+    for hijo in nodo.children:
+      if not isinstance(hijo.value, dict):
+        continue
+
+      clave, valor = next(iter(hijo.value.items()))
+
+      # Si el nodo tiene hijos propios, el valor era un dict: reconstruimos
+      if len(hijo.children) > 0:
+        resultado[clave] = self._nodo_a_dict(hijo)
+      else:
+        resultado[clave] = valor
+
+    return resultado
 
 class Node:
   """Representa un nodo del árbol general con un valor y una lista de hijos."""

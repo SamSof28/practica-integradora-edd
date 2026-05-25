@@ -56,6 +56,20 @@ class DocumentCollection:
             nuevo_arbol = GeneralTree(raiz)
             self.documents.append(nuevo_arbol)
 
+    def a_json(self) -> str:
+        """Convierte todos los documentos de la colección a una cadena JSON.
+
+        Recorre cada árbol de la colección, llama a su método `a_dict` para
+        reconstruir el diccionario original y serializa la lista completa.
+
+        Returns:
+            str: Representación JSON de todos los documentos de la colección.
+        """
+        lista_documentos = []
+        for documento in self.documents:
+            lista_documentos.append(documento.a_dict())
+        return json.dumps(lista_documentos, ensure_ascii=False, indent=2)
+
     def find(self, criterio: dict) -> LinkedList:
         """Busca y filtra los documentos que cumplan con todos los criterios.
 
