@@ -1,5 +1,5 @@
 from src.structures import LinkedList
-from src.tree_logic import GeneralTree, Node, encontrar_nodos
+from src.tree_logic import GeneralTree, Node, encontrar_nodos, KeyValuePair
 from typing import Any
 
 import operator
@@ -42,14 +42,14 @@ class DocumentCollection:
         """
         return f"{self.documents}"
 
-    def load(self, data: list):
+    def load(self, data: list) -> None:
         """Carga una lista de diccionarios y los convierte en árboles.
 
         Args:
             data (list): Lista de documentos estructurados en forma de diccionario.
         """
         for indice, document in enumerate(data):
-            raiz = Node({"Documento": f"{indice}"})
+            raiz = Node(KeyValuePair("Documento", f"{indice}"))
             for dato in document.items():
                 raiz.children.append(encontrar_nodos(dato))
 
@@ -60,12 +60,16 @@ class DocumentCollection:
         """Convierte todos los documentos de la colección a una cadena JSON.
 
         Recorre cada árbol de la colección, llama a su método `a_dict` para
-        reconstruir el diccionario original y serializa la lista completa.
+        reconstruir el diccionario original (uso temporal permitido) y lo
+        serializa usando json.dumps. Los documentos se recopilan en una
+        lista de Python temporalmente solo para serialización JSON.
 
         Returns:
             str: Representación JSON de todos los documentos de la colección.
         """
-        lista_documentos = []
+        # Usamos una lista de Python temporalmente solo para serializar a JSON
+        # (uso temporal permitido por restricciones)
+        lista_documentos: list[dict[Any, Any]] = []
         for documento in self.documents:
             lista_documentos.append(documento.a_dict())
         return json.dumps(lista_documentos, ensure_ascii=False, indent=2)
@@ -111,16 +115,20 @@ def evaluar_condicion(valor_documento: Any, condicion: Any) -> bool:
     if isinstance(condicion, dict):
         for op_texto, valor_esperado in condicion.items():
             # Verificamos si el operador existe en nuestro mapeo de métodos especiales
-            if op_texto in DICCIONARIO_OPERADORES:
-                operacion = DICCIONARIO_OPERADORES[op_texto]
-                try:
-                    # Aquí se ejecuta el método especial (ej: valor_documento.__gt__(valor_esperado))
-                    if not operacion(valor_documento, valor_esperado):
-                        return False
-                except TypeError:
-                    # Caso borde: Intentar comparar un string con un entero ("Ana" > 25)
+            if op_texto not in DICCIONARIO_OPERADORES:
+                raise ValueError(f"Operador desconocido: {op_texto}")
+            
+            operacion = DICCIONARIO_OPERADORES[op_texto]
+            try:
+                # Aquí se ejecuta el método especial (ej: valor_documento.__gt__(valor_esperado))
+                if not operacion(valor_documento, valor_esperado):
                     return False
+            except TypeError:
+                # Caso borde: Intentar comparar un string con un entero ("Ana" > 25)
+                return False
         return True
     
     # Si es una consulta simple (ej: {"ciudad": "Medellín"}), usamos la igualdad común
     return valor_documento == condicion
+
+

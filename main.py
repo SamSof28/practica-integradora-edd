@@ -2,7 +2,7 @@ from src.engine import DocumentCollection
 import json
 import os
 
-os.system("clear")
+os.system("cls")
 
 # 1. Instanciar la colección
 collection = DocumentCollection()
@@ -24,3 +24,5 @@ print(collection.find({
 print("----"*5)
 
 print(collection)
+
+print(collection.documents.head)

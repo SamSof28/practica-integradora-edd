@@ -2,6 +2,47 @@ from __future__ import annotations
 from src.structures import LinkedList
 from typing import Any, Optional
 
+class KeyValuePair:
+  """Representa un par clave-valor que almacena un nodo del árbol.
+  
+  Esta clase reemplaza el uso de diccionarios de Python como estructura
+  interna del árbol, permitiendo su uso solo temporalmente para lectura
+  inicial, consultas y reconstrucción JSON.
+  """
+  
+  def __init__(self, key: Any, value: Any) -> None:
+    """Inicializa un par clave-valor.
+    
+    Args:
+      key (Any): La clave del par.
+      value (Any): El valor del par.
+    """
+    self.key: Any = key
+    self.value: Any = value
+  
+  def __repr__(self) -> str:
+    """Devuelve una representación textual del par clave-valor.
+    
+    Returns:
+      str: Texto con formato 'clave: valor'.
+    """
+    if isinstance(self.value, dict):
+      return f"{self.key}:"
+    return f"{self.key}: {self.value}"
+  
+  def __eq__(self, other: Any) -> bool:
+    """Compara dos pares clave-valor.
+    
+    Args:
+      other (Any): Otro objeto para comparar.
+    
+    Returns:
+      bool: True si ambos tienen la misma clave y valor.
+    """
+    if isinstance(other, KeyValuePair):
+      return self.key == other.key and self.value == other.value
+    return False
+
 class GeneralTree:
   """Representa un árbol general con un nodo raíz y múltiples hijos."""
 
@@ -45,12 +86,12 @@ class GeneralTree:
 
     return result
 
-  def insert(self, parent_value: dict[Any, Any], child_value: dict[Any, Any], current: Optional[Node] = None) -> None:
+  def insert(self, parent_value: KeyValuePair, child_value: KeyValuePair, current: Optional[Node] = None) -> None:
     """Inserta un nodo hijo debajo del primer padre que coincida.
 
     Args:
-      parent_value (tuple[Any, Any]): Valor del nodo padre a localizar.
-      child_value (tuple[Any, Any]): Valor del nodo hijo a insertar.
+      parent_value (KeyValuePair): Valor del nodo padre a localizar.
+      child_value (KeyValuePair): Valor del nodo hijo a insertar.
       current (Node, optional): Nodo actual usado en la búsqueda recursiva.
 
     Returns:
@@ -94,11 +135,11 @@ class GeneralTree:
 
     # Recorremos la lista enlazada de hijos del nodo actual
     for hijo in nodo_actual.children:
-      # Validamos si la clave objetivo existe dentro del diccionario del nodo
-      if isinstance(hijo.value, dict) and clave_objetivo in hijo.value:
+      # Validamos si la clave objetivo coincide con la del nodo
+      if isinstance(hijo.value, KeyValuePair) and hijo.value.key == clave_objetivo:
         # CASO BASE: Si es la última parte de la ruta, devolvemos su valor real
         if len(partes) == 1:
-          return hijo.value[clave_objetivo]
+          return hijo.value.value
         
         # CASO RECURSIVO: Si faltan más niveles, seguimos bajando por sus hijos
         return self._buscar_por_ruta_recursivo(hijo, partes[1:])
@@ -130,10 +171,11 @@ class GeneralTree:
     resultado: dict[Any, Any] = {}
 
     for hijo in nodo.children:
-      if not isinstance(hijo.value, dict):
+      if not isinstance(hijo.value, KeyValuePair):
         continue
 
-      clave, valor = next(iter(hijo.value.items()))
+      clave = hijo.value.key
+      valor = hijo.value.value
 
       # Si el nodo tiene hijos propios, el valor era un dict: reconstruimos
       if len(hijo.children) > 0:
@@ -146,14 +188,14 @@ class GeneralTree:
 class Node:
   """Representa un nodo del árbol general con un valor y una lista de hijos."""
 
-  def __init__(self, value: dict[Any, Any]) -> None:
+  def __init__(self, value: KeyValuePair) -> None:
     """Inicializa el nodo con un valor y una colección vacía de hijos.
 
     Args:
-      value (dict[Any, Any]): Par clave-valor que almacena el nodo.
+      value (KeyValuePair): Par clave-valor que almacena el nodo.
     """
-    self.value: dict[Any, Any] = value
-    self.children = LinkedList()
+    self.value: KeyValuePair = value
+    self.children: LinkedList = LinkedList()
 
   def __repr__(self) -> str:
     """Devuelve una representación textual compacta del nodo.
@@ -161,34 +203,25 @@ class Node:
     Returns:
       str: Texto que muestra la clave y, si aplica, el valor del nodo.
     """
-    if isinstance(self.value, dict):
-      key, value = next(iter(self.value.items()))
-      if isinstance(value, dict):
-        return f"{key}:"
-      return f"{key}: {value}"
-    return f"{self.value}"
+    return str(self.value)
 
-def encontrar_nodos(tupla: tuple[Any, Any] | dict[Any, Any]) -> Node:
+def encontrar_nodos(tupla: tuple[Any, Any]) -> Node:
   """Convierte un par clave-valor en un nodo y sus descendientes.
 
   Args:
-    tupla (tuple[Any, Any] | dict[Any, Any]): Par clave-valor a convertir en nodo.
+    tupla (tuple[Any, Any]): Par clave-valor a convertir en nodo.
 
   Returns:
     Node: Nodo construido, con hijos recursivos si el valor es un diccionario.
   """
-  if isinstance(tupla, tuple):
-    key, value = tupla
-    node_value = {key: value}
-  else:
-    node_value = tupla
-
+  key, value = tupla
+  node_value: KeyValuePair = KeyValuePair(key, value)
   new_node: Node = Node(node_value)
 
-  key, value = next(iter(new_node.value.items()))
+  # Si el valor es un diccionario (estructura temporal permitida),
+  # creamos nodos hijos recursivamente
   if isinstance(value, dict):
     for dato in value.items():
-
       new_node.children.append(encontrar_nodos(dato))
 
   return new_node
