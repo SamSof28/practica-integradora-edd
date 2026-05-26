@@ -1,5 +1,5 @@
 from src.structures import LinkedList
-from src.tree_logic import GeneralTree, Node, encontrar_nodos, KeyValuePair
+from src.tree_logic import GeneralTree, Node, encontrar_nodos
 from typing import Any
 
 import operator
@@ -42,14 +42,14 @@ class DocumentCollection:
         """
         return f"{self.documents}"
 
-    def load(self, data: list) -> None:
+    def load(self, data: list):
         """Carga una lista de diccionarios y los convierte en árboles.
 
         Args:
             data (list): Lista de documentos estructurados en forma de diccionario.
         """
         for indice, document in enumerate(data):
-            raiz = Node(KeyValuePair("Documento", f"{indice}"))
+            raiz = Node({"Documento": f"{indice}"})
             for dato in document.items():
                 raiz.children.append(encontrar_nodos(dato))
 
@@ -61,15 +61,13 @@ class DocumentCollection:
 
         Recorre cada árbol de la colección, llama a su método `a_dict` para
         reconstruir el diccionario original (uso temporal permitido) y lo
-        serializa usando json.dumps. Los documentos se recopilan en una
-        lista de Python temporalmente solo para serialización JSON.
+        serializa usando json.dumps.
 
         Returns:
             str: Representación JSON de todos los documentos de la colección.
         """
-        # Usamos una lista de Python temporalmente solo para serializar a JSON
-        # (uso temporal permitido por restricciones)
-        lista_documentos: list[dict[Any, Any]] = []
+        # Se usa una lista de Python temporalmente solo para serializar a JSON
+        lista_documentos = []
         for documento in self.documents:
             lista_documentos.append(documento.a_dict())
         return json.dumps(lista_documentos, ensure_ascii=False, indent=2)
