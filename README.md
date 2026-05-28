@@ -5,7 +5,7 @@
 
 ---
 
-# ArborNexus Engine 🌳🔗
+# Linked Docs 🌳🔗
 > **Mini motor documental NoSQL basado en estructuras jerárquicas y lineales propias.**
 
 Proyecto integrador para la materia **Estructuras de Datos (2026-1)**. El sistema está diseñado para emular el comportamiento de una colección documental NoSQL (como MongoDB) utilizando árboles generales y listas enlazadas construidas desde cero.
@@ -70,10 +70,18 @@ print(resultados)
 
 ---
 
-## 📊 Análisis de Complejidad Algorítmica
+## 📊 Análisis de Complejidad Temporal Algorítmica
 
 * **Carga de Documentos:** **O(N * M)** donde *N* es la cantidad de documentos JSON y *M* el número de atributos/campos internos procesados recursivamente.
 * **Búsqueda por Ruta:** **O(D * C)** donde *D* representa la profundidad máxima de la ruta provista (splits) y *C* es el número de hijos en la lista enlazada local por nivel.
 * **Consulta sobre la Colección:** **O(N * P)** siendo *N* el tamaño de la lista enlazada de documentos y *P* el costo de evaluar cada predicado sobre los árboles.
 * **Conversión de Árbol a JSON:** **O(V)** donde *V* es la cantidad total de nodos que componen el árbol del documento, visitando cada elemento una única vez de manera recursiva.
 
+---
+
+## 📊 Análisis de Complejidad Espacial Algorítmica
+
+* **Carga de Documentos:** **O(N * M)** donde *N* es la cantidad de documentos JSON y *M* el número de atributos/campos internos procesados recursivamente.
+* **Búsqueda por Ruta:** **O(D)** donde *D* representa la profundidad máxima de la ruta provista (splits), por lo que se guarda cada llamada de la funcion en el call stack.
+* **Consulta sobre la Colección:** **O(K)** Se crea una Linked list temporal para retornas los *K* documentos que cumplieron con el criterio.
+* **Conversión de Árbol a JSON:** **O(V + D)** la conversión genera *V* diccionarios para cada nodo del arbol y la pila de recursión es para todos los llamados osea *D*
