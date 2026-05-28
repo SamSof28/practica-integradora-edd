@@ -142,7 +142,34 @@ class GeneralTree:
         resultado[clave] = valor
 
     return resultado
-
+  
+  def mayusculas_nivel_k(self, k: int, current: Optional[Node] = None, indice: int = 0) -> None:
+    if self.root is None:
+      return
+    
+    if current is None:
+      current = self.root
+      
+    niveles: dict[int, list] = {}
+        
+    if k == indice:
+      for elementos in current.value:
+        if isinstance(current.value[elementos], str):
+          current.value[elementos] = current.value[elementos].upper()
+          return
+    
+    
+    if indice in niveles:
+      niveles[indice].append(current)
+    else:
+      niveles[indice] = [current]
+      
+    
+    for child in current.children:
+      self.mayusculas_nivel_k(k, child, indice + 1)
+      
+      
+      
 class Node:
   """Representa un nodo del árbol general con un valor y una lista de hijos."""
 
