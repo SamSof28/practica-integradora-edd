@@ -167,6 +167,31 @@ class GeneralTree:
     
     for child in current.children:
       self.mayusculas_nivel_k(k, child, indice + 1)
+
+    
+  # FUNCIÓN AUXILIAR RECURSIVA PARA GENERAR EL GRAFO DE GRAPHVIZ
+def construir_grafo_dot(root: Optional[Node], dot_str: str = "", contador: Optional[list[int]] = None) -> str:
+    if contador is None:
+      contador = [0]
+
+    if root is None:
+      return dot_str
+
+    id_padre = contador[0]
+    clave, valor = next(iter(root.value.items()))
+    
+    # Si el valor es un subdiccionario, solo mostramos la clave en la caja
+    label = f"{clave}" if isinstance(valor, dict) else f"{clave}: {valor}"
+    dot_str += f'  node{id_padre} [label="{label}", shape=box, style=filled, fillcolor="#E3F2FD", fontname="Arial"];\n'
+    
+    id_propio = id_padre
+    for hijo in root.children:
+        contador[0] += 1
+        id_hijo = contador[0]
+        dot_str += f'  node{id_propio} -> node{id_hijo};\n'
+        dot_str = construir_grafo_dot(hijo, dot_str, contador)
+        
+    return dot_str
       
       
       
