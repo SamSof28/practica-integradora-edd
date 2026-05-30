@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+import streamlit.components.v1 as components
 from src.engine import DocumentCollection
 from src.tree_logic import construir_grafo_dot
 import time
@@ -16,6 +17,109 @@ if "engine" not in st.session_state:
     st.session_state.engine = DocumentCollection()
 if "json_nombre" not in st.session_state:
     st.session_state.json_nombre = "coleccion_modificada.json"
+
+
+def render_dot_with_zoom(dot_source: str, height: int = 900) -> None:
+        html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        :root {{ color-scheme: light; }}
+        body {{ margin: 0; background: #ffffff; font-family: Arial, sans-serif; }}
+        .toolbar {{
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 10px 12px;
+            border-bottom: 1px solid #d7e0ea;
+            background: linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }}
+        .toolbar button {{
+            border: 1px solid #c7d3e0;
+            background: #ffffff;
+            color: #1f2937;
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }}
+        .toolbar button:hover {{ background: #f3f7fb; }}
+        .toolbar .hint {{ color: #4b5563; font-size: 13px; margin-left: auto; }}
+        #graph-shell {{ height: {height}px; overflow: hidden; border: 1px solid #d7e0ea; border-radius: 14px; background: #fff; }}
+        #graph {{ width: 100%; height: calc({height}px - 48px); }}
+        .error {{ padding: 14px; color: #b91c1c; font-size: 14px; white-space: pre-wrap; }}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/viz.js@2.1.2/viz.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/viz.js@2.1.2/full.render.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+</head>
+<body>
+    <div class="toolbar">
+        <button id="zoom-in" type="button">Zoom +</button>
+        <button id="zoom-out" type="button">Zoom -</button>
+        <button id="zoom-reset" type="button">Restablecer</button>
+        <span class="hint">Rueda del mouse para zoom, arrastra para mover</span>
+    </div>
+    <div id="graph-shell">
+        <div id="graph"></div>
+    </div>
+    <script>
+        const dotSource = {json.dumps(dot_source)};
+        let panZoom = null;
+
+        async function renderGraph() {{
+            try {{
+                const viz = new Viz();
+                const svg = await viz.renderString(dotSource);
+                const graphEl = document.getElementById('graph');
+                graphEl.innerHTML = svg;
+
+                const svgElement = graphEl.querySelector('svg');
+                if (!svgElement) {{
+                    throw new Error('No se pudo generar el SVG del árbol.');
+                }}
+
+                svgElement.removeAttribute('width');
+                svgElement.removeAttribute('height');
+                svgElement.style.width = '100%';
+                svgElement.style.height = '100%';
+
+                if (panZoom) {{
+                    panZoom.destroy();
+                }}
+
+                panZoom = svgPanZoom(svgElement, {{
+                    zoomEnabled: true,
+                    panEnabled: true,
+                    controlIconsEnabled: false,
+                    fit: true,
+                    center: true,
+                    minZoom: 0.15,
+                    maxZoom: 25,
+                    mouseWheelZoomEnabled: true,
+                }});
+
+                document.getElementById('zoom-in').onclick = () => panZoom.zoomIn();
+                document.getElementById('zoom-out').onclick = () => panZoom.zoomOut();
+                document.getElementById('zoom-reset').onclick = () => {{
+                    panZoom.reset();
+                    panZoom.fit();
+                    panZoom.center();
+                }};
+            }} catch (error) {{
+                document.getElementById('graph').innerHTML = '<div class="error">' + error + '</div>';
+            }}
+        }}
+
+        renderGraph();
+    </script>
+</body>
+</html>"""
+        components.html(html, height=height + 54, scrolling=False)
 
 
 # --- INTERFAZ GRÁFICA ---
@@ -99,12 +203,20 @@ with tab_visualizar:
         if doc_seleccionado:
             arbol_objetivo = doc_seleccionado[1]
             
-            # Generar el código DOT para Graphviz
-            if arbol_objetivo.root:
-                cuerpo_dot = construir_grafo_dot(arbol_objetivo.root, "", [0])
-                codigo_dot = f"digraph G {{\n  rankdir=LR;\n{cuerpo_dot}\n}}"
-                # Desplegar el árbol visual de forma nativa e interactiva
-                st.graphviz_chart(codigo_dot, use_container_width=True)
+            with st.expander("Abrir árbol en vista ampliada", expanded=True):
+                st.caption("Usa la rueda del mouse para acercar o alejar y arrastra para mover el árbol dentro del visor.")
+
+                # Generar el código DOT para Graphviz
+                if arbol_objetivo.root:
+                    cuerpo_dot = construir_grafo_dot(arbol_objetivo.root, "", [0])
+                    codigo_dot = f"""digraph G {{
+    rankdir=TB;
+    graph [bgcolor="white", pad="0.45", margin="0.2", nodesep="0.7", ranksep="1.0"];
+    node [shape=box, style="rounded,filled", fillcolor="#E3F2FD", fontname="Arial", fontsize="15", margin="0.18,0.12"];
+    edge [color="#607D8B", penwidth="1.2"];
+{cuerpo_dot}
+}}"""
+                    render_dot_with_zoom(codigo_dot, height=900)
 
 # PESTAÑA 2: MODIFICAR Y ELIMINAR (EL CAMBIO EN VIVO)
 with tab_modificar:
@@ -159,9 +271,17 @@ with tab_modificar:
 # PESTAÑA 3: LA TERMINAL NOSQL (TU MOTOR DE BÚSQUEDA)
 with tab_terminal:
     st.header("Consola Interactiva de Consultas")
-    st.write("Escribe una consulta en formato JSON estándar de operadores NoSQL.")
+    st.write("Escribe una consulta en formato JSON estándar de operadores NoSQL. Puedes pegar filtros anidados con notación de punto en las claves.")
     
-    query_ejemplo = '{\n  "edad": {"$gt": 25},\n  "ciudad": "Medellín"\n}'
+    query_ejemplo = '''{
+    "usuario.perfil.personal.contacto.direccion.ubicacion.coordenadas.metadata.zona.clasificacion.detalles.transporte.informacion.rutas": {
+        "$gte": 5,
+        "$lte": 15
+    },
+    "usuario.perfil.personal.contacto.direccion.ubicacion.coordenadas.metadata.zona.clasificacion.detalles.transporte.informacion.estado": {
+        "$ne": "suspendido"
+    }
+}'''
     query_texto = st.text_area("Query Editor (Soporta $eq, $ne, $gt, $gte, $lt, $lte):", value=query_ejemplo, height=150)
     
     if st.button("⚡ Ejecutar Query"):
